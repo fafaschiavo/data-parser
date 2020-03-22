@@ -3,7 +3,7 @@ export const debug = process.env.NODE_ENV === 'development'
 export const purge_store_persist_on_reload = process.env.NODE_ENV === 'development' ? false : false
 
 // API endpoints ----------------------------------------------------------------------------------------------------------------
-export const scraper_endpoint = process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:5000/scrape/' : 'http://localhost:5000/scrape/'
+export const scraper_endpoint = process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:5000/scrape/' : 'http://127.0.0.1:5000/scrape/'
 
 // Default Tags
 export const tag_options = [
