@@ -115,16 +115,6 @@ class PostProcessPopovoer extends React.Component {
 }
 
 
-function IsJsonString(str) {
-	try {
-		JSON.parse(str);
-	} catch (e) {
-		return false;
-	}
-	return true;
-}
-
-
 function prepare_post_process_array(urls, selectors, matches){
 	var to_post_process_array = [];
 

@@ -42,15 +42,6 @@ function create_tag_dict(tag_array){
 	return tag_dict
 }
 
-function IsJsonString(str) {
-	try {
-		JSON.parse(str);
-	} catch (e) {
-		return false;
-	}
-	return true;
-}
-
 function generate_csv_from_matches(final_results, tags, urls){
 	let csv_export_array = [];
 
