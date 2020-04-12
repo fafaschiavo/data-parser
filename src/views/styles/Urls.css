@@ -1,4 +1,4 @@
-.home-main-container{
+.urls-main-container{
 	height: calc(100vh - 50px);
 	display: flex;
 	justify-content: center;
@@ -6,52 +6,53 @@
 	flex-direction: column;
 	background-color: #f5f5f5;
 }
-.home-section{
+.urls-section{
 	min-width: 900px;
 	padding: 20px;
 	margin-bottom: 20px;
 }
-.home-section-header{
+.urls-section-header{
 	display: flex;
 	justify-content: space-between;
 	align-items: flex-start;
 }
-.home-section-header-title{
+.urls-section-header-title{
 	color: #393924;
 	font-family: Roboto;
 	font-size: 24px;
 	font-weight: 300;
 	line-height: 32px;
 }
-.home-section-header-subtitle{
+.urls-section-header-subtitle{
 	color: #393924;
 	font-family: Roboto;
 	font-size: 14px;
 	font-weight: 300;
 	line-height: initial;
 }
-.home-section-body{
-
+.urls-section-body{
+	max-height: 30vh;
+	overflow: auto;
 }
-.home-run-sample-button{
+.urls-run-sample-button{
 	margin-right: 10px !important;
 }
-.home-run-button{
+.urls-run-button{
 	
 }
-.home-selector-container{
+.urls-selector-container{
 	display: flex;
 	justify-content: center;
 	align-items: center;
 }
-.home-selector-input-container{
+.urls-selector-input-container{
 	flex: 1;
 }
-.home-selector-icon{
+.urls-selector-icon{
 	cursor: pointer;
 	margin-left: 6px;
 }
-.home-tag-indicator{
+.urls-tag-indicator{
 	border-radius: 2px;
     padding: 2px;
     padding-left: 6px;

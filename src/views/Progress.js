@@ -26,7 +26,8 @@ class Progress extends React.Component {
 			urls: this.props.crawl_urls,
 			in_queue_counter: 0,
 			initial_queue_size: 0,
-			redirect: false
+			redirect: false,
+			matches: {}
 		}
 
 		this.crawl = this.crawl.bind(this);
@@ -59,14 +60,33 @@ class Progress extends React.Component {
 	}
 
 	crawl(url){
+		var selector_ids = Object.keys(this.props.crawl_selectors);
+
+		// Create an empty dict for the current URL being crawler
+		// eslint-disable-next-line
+		this.state.matches[url.url_id] = {}
+
+		// Now, for each one of the selector IDs, let's create an empty array with the selector id as the key.
+		// They will later be replaces with the matches if we find any.
+		for (var i = selector_ids.length - 1; i >= 0; i--) {
+			let selector_id = selector_ids[i];
+			// eslint-disable-next-line
+			this.state.matches[url.url_id][selector_id] = []
+		}
+
 		$.ajax({
 			context: this,
 			url: constants.scraper_endpoint,
 			type: 'get',
 			data: {
-				url: url.url
+				url: url.url,
+				selectors: this.props.crawl_selectors,
+				settings: this.props.scraper_settings
 			},
 			success: function(data) {
+				// eslint-disable-next-line
+				this.state.matches[url.url_id] = Object.assign(this.state.matches[url.url_id], data.matches);
+
 				let urls = Object.assign({}, this.state.urls);
 				urls[url.url_id].status = data.status
 				urls[url.url_id].page_source = data.page_source
@@ -83,7 +103,7 @@ class Progress extends React.Component {
 			complete: function(XHR, status){
 				this.update_queue();
 			},
-			timeout: 60000
+			timeout: 120000
 		});
 	}
 
@@ -106,6 +126,7 @@ class Progress extends React.Component {
 
 	crawl_finished(){
 		this.props.actions.set_crawl_urls(this.state.urls)
+		this.props.actions.set_partial_results(this.state.matches);
 		this.setState({redirect: "/partial-results/"})
 	}
 
@@ -129,18 +150,19 @@ class Progress extends React.Component {
 					<React.Fragment>
 						<br />
 						<Divider />
-
-						{Object.keys(this.state.urls).map((url_id) => {
-							return(
-								<React.Fragment key={uniqid()}>
-									<div className="progress-item" key={uniqid()}>
-										<div key={uniqid()} className="progress-item-url">{this.state.urls[url_id].url}</div>
-										<div key={uniqid()} className="progress-item-status">{this.state.urls[url_id].status}</div>
-									</div>
-									<Divider key={uniqid()} />
-								</React.Fragment>
-							)
-						})}
+						<div className="progress-section-url-container">
+							{Object.keys(this.state.urls).map((url_id) => {
+								return(
+									<React.Fragment key={uniqid()}>
+										<div className="progress-item" key={uniqid()}>
+											<div key={uniqid()} className="progress-item-url">{this.state.urls[url_id].url}</div>
+											<div key={uniqid()} className="progress-item-status">{this.state.urls[url_id].status}</div>
+										</div>
+										<Divider key={uniqid()} />
+									</React.Fragment>
+								)
+							})}
+						</div>
 					</React.Fragment>
 
 				</Paper>
@@ -154,6 +176,7 @@ function mapStateToProps(state) {
 	return {
 		crawl_urls: state.GlobalReducer.crawl_urls,
 		crawl_selectors: state.GlobalReducer.crawl_selectors,
+		scraper_settings: state.GlobalReducer.scraper_settings,
 	}
 }
 

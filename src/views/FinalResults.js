@@ -10,7 +10,6 @@ import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import { CSVLink } from "react-csv";
 import posed from 'react-pose';
-import ReactJson from 'react-json-view'
 
 // Constants import
 import * as constants from '../constants.js'
@@ -32,6 +31,7 @@ const PosedCell = posed.div({
 	press: { scale: 0.98 }
 });
 
+// Simple helper function to create a dictionary with the tag_id's as the keys and the actual tags as the values
 function create_tag_dict(tag_array){
 	var tag_dict = {}
 	for (var i = tag_array.length - 1; i >= 0; i--) {
@@ -44,22 +44,22 @@ function create_tag_dict(tag_array){
 
 function generate_csv_from_matches(final_results, tags, urls){
 	let csv_export_array = [];
-
 	let tag_titles = [];
-	let random_key = randomProperty(final_results)
-	for (var i = Object.keys(final_results[random_key]).length - 1; i >= 0; i--) {
-		let current_tag = Object.keys(final_results[random_key])[i];
-		if (current_tag in tags) {
-			tag_titles.push(tags[current_tag].title)
-		}else{
-			tag_titles.push('Composed')
-		}
+
+	// Now let's create an array with all the tag's names to work as the header of our CSV
+	// To do so we can get a random key (that represents a random URL) of our final_resuts dict and get all the tags for that url
+	let random_url_id = randomProperty(final_results)
+	for (var i = Object.keys(final_results[random_url_id]).length - 1; i >= 0; i--) {
+		let current_tag = Object.keys(final_results[random_url_id])[i];
+		tag_titles.push(tags[current_tag].title)
 	}
 
+	// The Header of our CSV then is the tag_titles variable plus the default headers we would like to add: URL, Status and Response Code
 	let header = ['URL', 'Status', 'Response Code', ...tag_titles];
 
 	csv_export_array.push(header)
 
+	// Now we simply have to push the results for each one of the URLs to a separate array (current_row) and then push that array to the final array that will become our CSV (csv_export_array)
 	// eslint-disable-next-line
 	for (var i = Object.keys(final_results).length - 1; i >= 0; i--) {
 		let current_row = []
@@ -71,8 +71,9 @@ function generate_csv_from_matches(final_results, tags, urls){
 
 		for (var j = Object.keys(final_results[current_url]).length - 1; j >= 0; j--) {
 			let current_tag = Object.keys(final_results[current_url])[j]
-			if (final_results[current_url][current_tag]) {
-				current_row.push(final_results[current_url][current_tag])
+
+			if (final_results[current_url][current_tag].length > 0) {
+				current_row.push(final_results[current_url][current_tag][0].text.replace(/(\r\n|\n|\r)/gm, " "))
 			}else{
 				current_row.push('')
 			}
@@ -95,8 +96,6 @@ class FinalResults extends React.Component {
 			csv_data: generate_csv_from_matches(this.props.final_results, tag_dict, this.props.crawl_urls),
 			redirect: false
 		}
-
-		console.log(this.props.final_results)
 	}
 
 	render() {
@@ -118,7 +117,7 @@ class FinalResults extends React.Component {
 						</div>
 						<div>
 							<Button className="final-home-button" variant="contained" color="secondary" onClick={() => {this.setState({redirect: "/"})}}>Home</Button>
-							<CSVLink separator={"|"} filename={"pipe-separated-final-data.csv"} data={this.state.csv_data}>
+							<CSVLink separator={"|"} enclosingCharacter={`"`} filename={"pipe-separated-final-data.csv"} data={this.state.csv_data}>
 								<Button className="final-download-button" variant="contained" color="primary">DOWNLOAD</Button>
 							</CSVLink>
 						</div>
@@ -131,7 +130,7 @@ class FinalResults extends React.Component {
 										<Table.HeaderCell>URL</Table.HeaderCell>
 										{Object.keys(this.props.final_results[Object.keys(this.props.final_results)[0]]).map((tag_id) => {
 											return(
-												<Table.HeaderCell key={uniqid()}>{tag_id in this.state.tags ? this.state.tags[tag_id].title : 'Composed'}</Table.HeaderCell>
+												<Table.HeaderCell key={uniqid()}>{this.state.tags[tag_id].title}</Table.HeaderCell>
 											)
 										})}
 										<Table.HeaderCell>Status</Table.HeaderCell>
@@ -150,23 +149,15 @@ class FinalResults extends React.Component {
 													</PosedCell>
 												</Table.Cell>
 												{Object.keys(this.props.final_results[url_id]).map((tag_id) => {
-													if (tag_id in this.state.tags) {
-														return(
-															<Table.Cell key={uniqid()}>
-																<PosedCell>
-																	<CopyToClipboard text={this.props.final_results[url_id][tag_id].toString()}>
-																		<EllipsisText text={this.props.final_results[url_id][tag_id].toString()} length={"70"} />
-																	</CopyToClipboard>
-																</PosedCell>
-															</Table.Cell>
-														)
-													}else{
-														return(
-															<Table.Cell key={uniqid()}>
-																<ReactJson collapsed={true} src={JSON.parse(this.props.final_results[url_id][tag_id])} />
-															</Table.Cell>
-														)
-													}
+													return(
+														<Table.Cell key={uniqid()}>
+															<PosedCell>
+																<CopyToClipboard text={this.props.final_results[url_id][tag_id].length > 0 ? this.props.final_results[url_id][tag_id][0].text : ''}>
+																	<EllipsisText text={this.props.final_results[url_id][tag_id].length > 0 ? this.props.final_results[url_id][tag_id][0].text : ''} length={"70"} />
+																</CopyToClipboard>
+															</PosedCell>
+														</Table.Cell>
+													)
 												})}
 												<Table.Cell>
 													<PosedCell>	

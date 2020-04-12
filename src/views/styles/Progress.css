@@ -47,3 +47,7 @@
 	font-weight: bold;
 	padding-left: 10px;
 }
+.progress-section-url-container{
+	max-height: 500px;
+	overflow: auto;
+}

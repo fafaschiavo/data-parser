@@ -9,15 +9,35 @@ import EllipsisText from 'react-ellipsis-text';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
 import { CSVLink } from "react-csv";
 import posed from 'react-pose';
 import ReactJson from 'react-json-view'
+import validate from 'validate.js';
 
 // Actions
 import * as global_action_creators from '../actions/GlobalActions.js';
 
 // CSS Imports
 import './styles/PartialResults.css';
+
+function get_data_from_tag(tag, attr){
+	if (attr === 'innerText') {
+		return tag.structuredText
+	}
+
+	var result = tag.getAttribute(attr);
+	if (result == null){
+    	return ''
+	}
+
+	return result
+
+}
 
 function get_content(urls, selectors){
 	let matches = {}
@@ -61,12 +81,12 @@ function get_content(urls, selectors){
 
 						for (var k = tags.length - 1; k >= 0; k--) {
 							let unitary_tag = tags[k];
-							text.matches.push(unitary_tag.structuredText)
+							text.matches.push(get_data_from_tag(unitary_tag, selector.attr))
 							outerHTML.matches.push(unitary_tag.outerHTML)
 						}
 						matches[url_id][selector_id] = {data_type: 'json', text: JSON.stringify(text), html: JSON.stringify(outerHTML)}
 					}else{
-						matches[url_id][selector_id] = {data_type: 'single', text: tag.structuredText, html: tag.outerHTML}
+						matches[url_id][selector_id] = {data_type: 'single', text: get_data_from_tag(tag, selector.attr), html: tag.outerHTML}
 					}
 				}else{
 					matches[url_id][selector_id] = false
@@ -110,11 +130,17 @@ function generate_csv_from_matches(urls, selectors, matches){
 		// eslint-disable-next-line
 		for (var j = 0; j < Object.keys(selectors).length; j++) {
 			let selector_id = Object.keys(selectors)[j];
-			if (matches[url_id][selector_id]) {
-				current_row.push(matches[url_id][selector_id].text.replace(/(\r\n|\n|\r)/gm, " "))
+
+			if (matches[url_id][selector_id].length === 0) {
+				current_row.push('');
+
+			} else if (matches[url_id][selector_id].length === 1) {
+				current_row.push(matches[url_id][selector_id][0].text.replace(/(\r\n|\n|\r)/gm, " "));
+
 			}else{
-				current_row.push('')
+				current_row.push(JSON.stringify(matches[url_id][selector_id]).replace(/(\r\n|\n|\r)/gm, " "));
 			}
+
 		}
 
 		csv_export_array.push(current_row)
@@ -134,21 +160,77 @@ const PosedCell = posed.div({
 class PartialResults extends React.Component {
 	constructor(props) {
 		super(props);
-		
+
 		let matches = get_content(this.props.crawl_urls, this.props.crawl_selectors)
-		this.props.actions.set_partial_results(matches)
 
 		this.state = {
 			matches: matches,
-			redirect: false
+			redirect: false,
+			open_dialog: false,
+			dialog_json: [],
+			dialog_url: '',
 		}
+
+		this.use_result_as_urls = this.use_result_as_urls.bind(this);
+	}
+
+	use_result_as_urls(){
+		// Get base URL (without path) to use with relative paths down the line
+		const url = document.createElement('a');
+		url.setAttribute('href', this.state.dialog_url);
+		let base_url = url.protocol + '//' + url.hostname;
+		if (url.port.length > 0) {
+			base_url = base_url + ':' + url.port
+		}
+		// base_url = base_url + '/'
+
+		// Create a regex pattern to test for absolute URLs
+		var regex_pattern = new RegExp('^(?:[a-z]+:)?//', 'i');
+
+		var urls_to_crawl = {};
+		for (var i = this.state.dialog_json.length - 1; i >= 0; i--) {
+			let scraped_url = this.state.dialog_json[i].text;
+			let is_absolute_url = regex_pattern.test(scraped_url)
+
+			if (is_absolute_url) {
+				let url_checker = validate({website: scraped_url}, {website: {url: true}});
+
+				if (url_checker === undefined) {
+					let new_url_id = uniqid();
+					urls_to_crawl[new_url_id] = {
+						url: scraped_url,
+						url_id: new_url_id,
+						'status': 'in_queue',
+						page_source: false,
+						response_code: false
+					}
+				}
+			}else{
+				let url_checker = validate({website: base_url + scraped_url}, {website: {url: true}});
+
+				if (url_checker === undefined) {
+					let new_url_id = uniqid();
+					urls_to_crawl[new_url_id] = {
+						url: base_url + scraped_url,
+						url_id: new_url_id,
+						'status': 'in_queue',
+						page_source: false,
+						response_code: false
+					}
+				}
+			}
+		}
+
+		this.setState({open_dialog: false});
+		this.props.actions.set_full_list_urls(urls_to_crawl);
+		this.setState({redirect: '/'});
 	}
 
 	render() {
 		if (this.state.redirect) {
 			return <Redirect to={this.state.redirect} />
 		}
-
+	
 		return (
 			<div className="partial-main-container">
 				<Paper className="partial-section">
@@ -163,7 +245,7 @@ class PartialResults extends React.Component {
 						</div>
 						<div>
 							<Button className="post-process-previous-button" variant="contained" color="secondary" onClick={() => this.setState({redirect: '/urls/'})}>BACK</Button>
-							<CSVLink separator={"|"} filename={"pipe-separated-partial-data.csv"} data={generate_csv_from_matches(this.props.crawl_urls, this.props.crawl_selectors, this.state.matches)}>
+							<CSVLink separator={"|"} enclosingCharacter={`"`} filename={"pipe-separated-partial-data.csv"} data={generate_csv_from_matches(this.props.crawl_urls, this.props.crawl_selectors, this.props.partial_results)}>
 								<Button className="partial-download-button" variant="contained" color="secondary">DOWNLOAD</Button>
 							</CSVLink>
 							<Button className="partial-postprocess-button" variant="contained" color="primary" onClick={() => {this.setState({redirect: "/post-process/"})}}>Post Process</Button>
@@ -199,17 +281,24 @@ class PartialResults extends React.Component {
 													return(
 														<Table.Cell>
 															<PosedCell>
-																	{this.state.matches[url_id][selector_id].data_type === 'single' &&
-																	<CopyToClipboard text={ this.state.matches[url_id][selector_id] ? this.state.matches[url_id][selector_id].text : '' }>
-																		<EllipsisText
-																			text={ this.state.matches[url_id][selector_id] ? this.state.matches[url_id][selector_id].text : '' }
-																			length={"70"}
-																		/>
-																	</CopyToClipboard>
-																	}
-																	{this.state.matches[url_id][selector_id].data_type === 'json' &&
-																		<ReactJson collapsed={true} src={JSON.parse(this.state.matches[url_id][selector_id].text)} />
-																	}
+																{this.props.partial_results[url_id][selector_id].length === 1 &&
+																<CopyToClipboard text={ this.props.partial_results[url_id][selector_id][0].text }>
+																	<EllipsisText
+																		text={ this.props.partial_results[url_id][selector_id][0].text }
+																		length={"70"}
+																	/>
+																</CopyToClipboard>
+																}
+																{this.props.partial_results[url_id][selector_id].length > 1 &&
+																	<span className="partial-multiple-found" onClick={() => {
+																		this.setState({dialog_json: this.props.partial_results[url_id][selector_id]});
+																		// eslint-disable-next-line
+																		this.state.dialog_url = this.props.crawl_urls[url_id].url;
+																		this.setState({open_dialog: true});
+																	}}>
+																		Multiple Found
+																	</span>
+																}
 															</PosedCell>
 														</Table.Cell>
 													)
@@ -236,6 +325,25 @@ class PartialResults extends React.Component {
 						</div>
 					</div>
 				</Paper>
+
+
+				<Dialog
+					open={this.state.open_dialog}
+					onClose={() => this.setState({open_dialog: false})}
+					aria-labelledby="alert-dialog-title"
+					aria-describedby="alert-dialog-description"
+				>
+					<DialogTitle id="alert-dialog-title">Your selector returned multiple elements</DialogTitle>
+					<DialogContent>
+						<DialogContentText id="alert-dialog-description">
+							<ReactJson collapsed={true} src={this.state.dialog_json} />
+						</DialogContentText>
+					</DialogContent>
+					<DialogActions>
+						<Button variant="contained" color="secondary" onClick={() => this.setState({open_dialog: false})}>CLOSE</Button>
+						<Button variant="contained" color="primary" onClick={this.use_result_as_urls}>USE AS URLS</Button>
+					</DialogActions>
+				</Dialog>
 			</div>
 
 		);
@@ -247,6 +355,7 @@ function mapStateToProps(state) {
 	return {
 		crawl_urls: state.GlobalReducer.crawl_urls,
 		crawl_selectors: state.GlobalReducer.crawl_selectors,
+		partial_results: state.GlobalReducer.partial_results,
 	}
 }
 

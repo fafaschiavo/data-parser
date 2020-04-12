@@ -7,6 +7,14 @@ export function set_full_list_urls(full_list_urls){
 	return action_to_return;
 }
 
+export function set_scraper_settings(scraper_settings){
+	var action_to_return = {
+		type: 'SET_SCRAPER_SETTINGS',
+		scraper_settings: scraper_settings
+	};
+
+	return action_to_return;
+}
 
 export function set_crawl_urls(crawl_urls){
 	var action_to_return = {

@@ -7,7 +7,7 @@
 	background-color: #f5f5f5;
 }
 .post-process-main-container-inner{
-	min-width: 900px;
+	min-width: 1170px;
 	max-width: calc(100% - 200px);
 }
 .post-process-section{
@@ -48,16 +48,18 @@
 	align-items: stretch;
 }
 .post-process-section-body-left{
-	width: 200px;
-	min-height: 280px;
-	max-height: 34vh;
-	padding-right: 5px;
+	width: 290px;
+	min-height: 300px;
+	max-height: 400px;
+	padding: 5px;
+	background-color: #f2f2f2;
 }
 .post-process-section-body-right{
 	flex: 1;
 	padding-left: 15px;
 	display: flex;
 	flex-direction: column;
+	max-width: calc(100% - 300px);
 }
 .post-process-tag{
 	cursor: pointer;
@@ -97,6 +99,8 @@
 	margin-bottom: 10px;
 	flex: 1;
 	padding: 10px;
+	max-height: 300px;
+	overflow: auto;
 }
 .post-process-raw-html{
 	border: 1px solid #eaeaea;
@@ -104,6 +108,15 @@
 	margin-bottom: 10px;
 	flex: 1;
 	padding: 10px;
+	max-height: 300px;
+	overflow: auto;
+}
+.post-process-popover-divider-title{
+	margin-bottom: 5px;
+	margin-top: 15px;
+}
+.scrollarea-content  .post-process-popover-divider-title:first-of-type{
+	margin-top: 5px;	
 }
 .post-process-popover-tag{
 	cursor: pointer;
@@ -131,6 +144,7 @@
 }
 .post-process-selector-input-container{
 	flex: 1;
+	margin-right: 10px;
 }
 .post-process-selector-icon{
 	cursor: pointer;

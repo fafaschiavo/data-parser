@@ -42,7 +42,8 @@ class Selector extends React.Component {
 
 		this.state = {
 			open_tags_dialog: false,
-			is_selector_valid: true
+			open_attributes_dialog: false,
+			is_selector_valid: true,
 		}
 	}
 
@@ -70,8 +71,10 @@ class Selector extends React.Component {
 					{!this.props.config.tag &&
 						<span style={{backgroundColor: '#fd6764'}} className="home-tag-indicator">Post Process</span>
 					}
+
+					<span style={{backgroundColor: '#361ffb', marginLeft: 10, color: 'white'}} className="home-tag-indicator">{this.props.config.attr}</span>
 					<i className="home-selector-icon material-icons" onClick={() => this.setState({open_tags_dialog: true})}>label</i>
-					<i className="home-selector-icon material-icons">more_horiz</i>
+					<i className="home-selector-icon material-icons" onClick={() => this.setState({open_attributes_dialog: true})}>code</i>
 					<i className="home-selector-icon material-icons" onClick={() => this.props.remove_selector(this.props.config.selector_id)}>close</i>
 				</div>
 				<Divider />
@@ -108,6 +111,76 @@ class Selector extends React.Component {
 						)}
 					</List>
 				</Dialog>
+
+				<Dialog
+					onClose={() => this.setState({open_attributes_dialog: false})}
+					open={this.state.open_attributes_dialog}
+					aria-labelledby="simple-dialog-title"
+				>
+					<DialogTitle id="simple-dialog-title">Select an Attribute</DialogTitle>
+					<List>
+						<ListItem
+							button
+							onClick={() => {
+								this.setState({open_attributes_dialog: false});
+								this.props.add_attribute(this.props.config.selector_id, 'innerText');
+							}}
+							key={uniqid()}
+						>
+							<ListItemText primary={'innerText'} />
+						</ListItem>
+						<ListItem
+							button
+							onClick={() => {
+								this.setState({open_attributes_dialog: false});
+								this.props.add_attribute(this.props.config.selector_id, 'href');
+							}}
+							key={uniqid()}
+						>
+							<ListItemText primary={'href'} />
+						</ListItem>
+						<ListItem
+							button
+							onClick={() => {
+								this.setState({open_attributes_dialog: false});
+								this.props.add_attribute(this.props.config.selector_id, 'src');
+							}}
+							key={uniqid()}
+						>
+							<ListItemText primary={'src'} />
+						</ListItem>
+						<ListItem
+							button
+							onClick={() => {
+								this.setState({open_attributes_dialog: false});
+								this.props.add_attribute(this.props.config.selector_id, 'srcset');
+							}}
+							key={uniqid()}
+						>
+							<ListItemText primary={'srcset'} />
+						</ListItem>
+						<ListItem
+							button
+							onClick={() => {
+								this.setState({open_attributes_dialog: false});
+								this.props.add_attribute(this.props.config.selector_id, 'class');
+							}}
+							key={uniqid()}
+						>
+							<ListItemText primary={'class'} />
+						</ListItem>
+						<ListItem
+							button
+							onClick={() => {
+								this.setState({open_attributes_dialog: false});
+								this.props.add_attribute(this.props.config.selector_id, 'id');
+							}}
+							key={uniqid()}
+						>
+							<ListItemText primary={'id'} />
+						</ListItem>
+					</List>
+				</Dialog>
 			</React.Fragment>
 		);
 	}
@@ -127,6 +200,7 @@ class Home extends React.Component {
 		this.add_selector = this.add_selector.bind(this);
 		this.remove_selector = this.remove_selector.bind(this);
 		this.add_tag = this.add_tag.bind(this);
+		this.add_attribute = this.add_attribute.bind(this);
 		this.edit_selector = this.edit_selector.bind(this);
 		this.next = this.next.bind(this);
 	}
@@ -141,7 +215,7 @@ class Home extends React.Component {
 			css_selector: this.state.add_selector_field,
 			tag: false,
 			regex: '',
-			attr: '',
+			attr: 'innerText',
 			urls: [],
 			snackbar_open: false,
 			snackbar_message: '',
@@ -162,6 +236,13 @@ class Home extends React.Component {
 	add_tag(selector_id, tag){
 		let new_selectors = Object.assign({}, this.state.selectors);
 		new_selectors[selector_id]['tag'] = tag
+		this.setState({selectors: new_selectors})
+		this.props.actions.set_crawl_selectors(new_selectors)
+	}
+
+	add_attribute(selector_id, attribute){
+		let new_selectors = Object.assign({}, this.state.selectors);
+		new_selectors[selector_id]['attr'] = attribute
 		this.setState({selectors: new_selectors})
 		this.props.actions.set_crawl_selectors(new_selectors)
 	}
@@ -237,6 +318,7 @@ class Home extends React.Component {
 										config={this.state.selectors[selector_id]}
 										remove_selector={this.remove_selector}
 										add_tag={this.add_tag}
+										add_attribute={this.add_attribute}
 										edit_selector={this.edit_selector}
 										key={uniqid()}
 									/>

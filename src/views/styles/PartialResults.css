@@ -60,3 +60,8 @@ a{
 	border: 1px solid black;
 	cursor: pointer;
 }
+.partial-multiple-found{
+	color: #361FFB;
+	font-weight: bold;
+	cursor: pointer;
+}

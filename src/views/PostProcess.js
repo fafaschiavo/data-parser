@@ -7,6 +7,7 @@ import Divider from '@material-ui/core/Divider';
 import Input from '@material-ui/core/Input';
 import { Redirect } from 'react-router-dom';
 import Popover from 'react-text-selection-popover';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 import ScrollArea from 'react-scrollbar';
 import uniqid from 'uniqid';
 
@@ -29,6 +30,7 @@ class NewMatch extends React.Component {
 		return (
 			<React.Fragment>
 				<div className="post-process-selector-container">
+
 					<div className="post-process-selector-input-container">
 						<Input
 							label="Dense multiline"
@@ -42,6 +44,9 @@ class NewMatch extends React.Component {
 						/>
 					</div>
 					<span style={{backgroundColor: this.props.match.tag.color}} className="post-process-tag-indicator">{this.props.match.tag.title}</span>
+					<CopyToClipboard text={this.props.match.text}>
+						<i className="post-process-selector-icon material-icons">flip_to_front</i>
+					</CopyToClipboard>
 					<i className="post-process-selector-icon material-icons" onClick={() => this.props.parent.remove_match(this.props.match.tag.tag_id)}>close</i>
 				</div>
 				<Divider />
@@ -96,6 +101,7 @@ class PostProcessPopovoer extends React.Component {
 					onTextSelect={this.popover_open}
 					onTextUnselect={this.popover_close}
 				>
+					{/*
 					<div className="post-process-popover-content">
 						{constants.tag_options.map((tag) => 
 							<div
@@ -108,6 +114,7 @@ class PostProcessPopovoer extends React.Component {
 							</div>
 						)}
 					</div>
+					*/}
 				</Popover>
 			</React.Fragment>
 		);
@@ -125,23 +132,28 @@ function prepare_post_process_array(urls, selectors, matches){
 
 		// Check if the crawl was a success, ignore otherwise
 		if (url.status === 'success') {
+
 			// eslint-disable-next-line
 			for (var j = 0; j < Object.keys(selectors).length; j++) {
+
 				let selector_id = Object.keys(selectors)[j];
 				let selector = selectors[selector_id];
 
 				// Check if the tag for the selector is false, that's the signal that the selctor has no defined tag and should rather be post-processed
 				// Also check if the post process tag was found in the page source code
 
-				if (selector.tag === false && matches[url_id][selector_id] && matches[url_id][selector_id].data_type === "single") {
-					// If it was, then append the match to be post processed
-					to_post_process_array.push({
-						match: matches[url_id][selector_id],
-						selector: selector,
-						url: url,
-						post_processed: {}
-					})
+				if (selector.tag === false) {
+					for (var k = matches[url_id][selector_id].length - 1; k >= 0; k--) {
+						// If it was, then append the match to be post processed
+						to_post_process_array.push({
+							match: matches[url_id][selector_id][k],
+							selector: selector,
+							url: url,
+							post_processed: {}
+						})
+					}
 				}
+
 			}
 		}
 	}
@@ -192,7 +204,7 @@ function prepare_final_resuts(urls, selectors, matches, post_processed){
 			// eslint-disable-next-line
 			for (var j = all_tags.length - 1; j >= 0; j--) {
 				let current_tag = all_tags[j];
-				results[url.url_id][current_tag] = false
+				results[url.url_id][current_tag] = []
 			}
 		}
 	}
@@ -208,13 +220,12 @@ function prepare_final_resuts(urls, selectors, matches, post_processed){
 			let selector_id = Object.keys(selector_ids)[j];
 			let selector = selectors[selector_id];
 			let result = selector_ids[selector_id];
+			let tag = selector.tag;
 
-			if (selector.tag) {
-				if (urls[url_id].status === 'success') {
-					results[url_id][selector.tag.tag_id] = result.text;
-				}
-			}else if(matches[url_id][selector_id].data_type === 'json'){
-				results[url_id]['composed_' + selector_id] = matches[url_id][selector_id].text;
+			// If tag equals false, that means this selector should be post-processed and thus the resuls were already included in the previous loop
+			// So we only have to add the resuls where the tag actually has a tag dict assigned to it
+			if (tag) {
+				results[url_id][tag.tag_id] = result
 			}
 		}
 	}
@@ -230,7 +241,9 @@ function prepare_final_resuts(urls, selectors, matches, post_processed){
 			let post_procced_tag_id = Object.keys(post_processed_tags)[j];
 			let post_procced_tag = post_processed_tags[post_procced_tag_id]
 
-			results[url_id][post_procced_tag.tag.tag_id] = post_procced_tag.text;
+			results[url_id][post_procced_tag.tag.tag_id] = [{text: post_procced_tag.text, html: post_procced_tag.text}]
+
+			// results[url_id][post_procced_tag.tag.tag_id] = post_procced_tag.text;
 		}
 	}
 
@@ -252,13 +265,21 @@ class PostProcess extends React.Component {
 			current_match_index: 0,
 			to_post_process_array: to_post_process_array,
 			current_selection: '',
-			redirect: false
+			redirect: false,
+			current_tag_type: '',
+			render_divider: false
 		}
 
 		this.add_match = this.add_match.bind(this);
 		this.remove_match = this.remove_match.bind(this);
 		this.clear_matches = this.clear_matches.bind(this);
 		this.finish_post_process = this.finish_post_process.bind(this);
+
+		if (this.state.to_post_process_array.length === 0 ) {
+			let results = prepare_final_resuts(this.props.crawl_urls, this.props.crawl_selectors, this.props.partial_results, this.state.to_post_process_array);
+			this.props.actions.set_final_results(results);
+			this.state.redirect = '/final-results/';
+		}
 	}
 
 	add_match(tag){
@@ -332,15 +353,36 @@ class PostProcess extends React.Component {
 							<br />
 							<div className="post-process-section-body-inner">
 								<ScrollArea className="post-process-section-body-left" verticalContainerStyle={{width: 4}}>
-									{constants.tag_options.map((tag) => 
-										<div
-											className="post-process-popover-tag"
-											key={uniqid()}
-											onClick={() => { this.add_match(tag) }} 
-										>
-											<div className="post-process-popover-tag-color" style={{backgroundColor: tag.color}} key={uniqid()}></div>
-											<div className="post-process-popover-tag-title" key={uniqid()}>{tag.title}</div>
-										</div>
+									{constants.tag_options.map((tag) => {
+										if (tag.type !== this.state.current_tag_type) {
+											// eslint-disable-next-line
+											this.state.current_tag_type = tag.type;
+											// eslint-disable-next-line
+											this.state.render_divider = true;
+										}else{
+											// eslint-disable-next-line
+											this.state.render_divider = false;
+										}
+
+										return(
+											<React.Fragment>
+												{this.state.render_divider &&
+													<React.Fragment>
+														<div className="post-process-popover-divider-title">{this.state.current_tag_type}</div>
+														<Divider />
+													</React.Fragment>
+												}
+												<div
+													className="post-process-popover-tag"
+													key={uniqid()}
+													onClick={() => { this.add_match(tag) }} 
+												>
+													<div className="post-process-popover-tag-color" style={{backgroundColor: tag.color}} key={uniqid()}></div>
+													<div className="post-process-popover-tag-title" key={uniqid()}>{tag.title}</div>
+												</div>
+											</React.Fragment>
+										)
+									}
 									)}
 								</ScrollArea>
 								<div className="post-process-section-body-right">

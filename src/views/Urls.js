@@ -6,6 +6,8 @@ import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import TextField from '@material-ui/core/TextField';
 import Snackbar from '@material-ui/core/Snackbar';
+import Checkbox from '@material-ui/core/Checkbox';
+import update from 'react-addons-update';
 import uniqid from 'uniqid';
 import validate from 'validate.js';
 import ReactTooltip from 'react-tooltip'
@@ -14,7 +16,7 @@ import ReactTooltip from 'react-tooltip'
 import * as global_action_creators from '../actions/GlobalActions.js';
 
 // CSS Imports
-import './styles/Home.css';
+import './styles/Urls.css';
 
 // Get the first N keys of a dict
 function firstN(obj, n) {
@@ -47,6 +49,7 @@ class Home extends React.Component {
 		super(props);
 
 		// Reset the URLs status to in_queue
+
 		let urls = Object.assign({}, this.props.full_list_urls);
 		let url_ids = Object.keys(urls)
 		for (var i = url_ids.length - 1; i >= 0; i--) {
@@ -56,11 +59,13 @@ class Home extends React.Component {
 
 		this.state = {
 			add_selector_field: '',
-			urls: urls
+			urls: urls,
+			scraper_settings: this.props.scraper_settings,
 		}
 
 		this.url_list_changed = this.url_list_changed.bind(this);
 		this.run = this.run.bind(this);
+		this.use_proxy_changed = this.use_proxy_changed.bind(this);
 	}
 
 	url_list_changed(event){
@@ -113,7 +118,14 @@ class Home extends React.Component {
 		this.props.actions.set_crawl_urls(urls)
 		
 		this.setState({redirect: "/progress/"})
-	
+	}
+
+	use_proxy_changed(event, is_checked){
+		const new_state = update(this.state, {
+			scraper_settings: {use_proxy: {$set: is_checked}},
+		});
+		this.props.actions.set_scraper_settings(new_state.scraper_settings)
+		this.setState(new_state)
 	}
 
 	render() {
@@ -122,25 +134,25 @@ class Home extends React.Component {
 		}
 
 		return (
-			<div className="home-main-container">
+			<div className="urls-main-container">
 				<ReactTooltip />
-				<Paper className="home-section">
-					<div className="home-section-header">
+				<Paper className="urls-section">
+					<div className="urls-section-header">
 						<div>
-							<div className="home-section-header-title">
+							<div className="urls-section-header-title">
 								URLs to scrape
 							</div>
-							<div className="home-section-header-subtitle">
+							<div className="urls-section-header-subtitle">
 								URL list here - One per line
 							</div>
 						</div>
 						<div>							
-							<Button className="home-run-sample-button" variant="contained" color="secondary" onClick={() => this.setState({redirect: "/"})}>BACK</Button>
-							<Button className="home-run-sample-button" variant="contained" color="secondary" data-tip="Run a sample of 3 URLs only" onClick={() => this.run(false)}>RUN SAMPLE</Button>
-							<Button className="home-run-button" variant="contained" color="primary" onClick={() => this.run(true)}>RUN</Button>
+							<Button className="urls-run-sample-button" variant="contained" color="secondary" onClick={() => this.setState({redirect: "/"})}>BACK</Button>
+							<Button className="urls-run-sample-button" variant="contained" color="secondary" data-tip="Run a sample of 3 URLs only" onClick={() => this.run(false)}>RUN SAMPLE</Button>
+							<Button className="urls-run-button" variant="contained" color="primary" onClick={() => this.run(true)}>RUN</Button>
 						</div>
 					</div>
-					<div className="home-section-body">
+					<div className="urls-section-body">
 						<br />
 						<TextField
 							id="outlined-dense-multiline"
@@ -155,6 +167,31 @@ class Home extends React.Component {
 					</div>
 				</Paper>
 
+				<Paper className="urls-section">
+					<div className="urls-section-header">
+						<div>
+							<div className="urls-section-header-title">
+								Scraper options
+							</div>
+							<div className="urls-section-header-subtitle">
+								The settings to use when requesting the listed URLs.
+							</div>
+						</div>
+					</div>
+					<div className="urls-section-body">
+						<br />
+						<div>
+							<Checkbox
+								checked={this.state.scraper_settings.use_proxy}
+								onChange={this.use_proxy_changed}
+								color='primary'
+							/>
+							<span>Use proxies on every request</span>
+						</div>
+					</div>
+				</Paper>
+
+
 				<Snackbar message={this.state.snackbar_message} open={this.state.snackbar_open} onClose={() => this.setState({snackbar_open: false})} />
 			</div>
 		);
@@ -165,6 +202,7 @@ class Home extends React.Component {
 function mapStateToProps(state) {
 	return {
 		full_list_urls: state.GlobalReducer.full_list_urls,
+		scraper_settings: state.GlobalReducer.scraper_settings,
 	}
 }
 

@@ -3,7 +3,10 @@ const initial_state = {
 	crawl_urls: false,
 	crawl_selectors: false,
 	partial_results: false,
-	final_results: false
+	final_results: false,
+	scraper_settings: {
+		use_proxy: true
+	}
 }
 
 function GenericReducer(state = initial_state, action) {
@@ -12,6 +15,10 @@ function GenericReducer(state = initial_state, action) {
 	switch (action.type) {
 		case 'SET_FULL_LIST_URLS':
 			new_state.full_list_urls = action.full_list_urls;
+			return new_state
+
+		case 'SET_SCRAPER_SETTINGS':
+			new_state.scraper_settings = action.scraper_settings;
 			return new_state
 
 		case 'SET_CRAWL_URLS':
