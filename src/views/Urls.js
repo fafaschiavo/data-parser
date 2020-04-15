@@ -91,7 +91,7 @@ class Home extends React.Component {
 		// eslint-disable-next-line
 		for (var i = Object.keys(urls).length - 1; i >= 0; i--) {
 			let current_url_id = Object.keys(urls)[i];
-			let url_checker = validate({website: urls[current_url_id]['url']}, {website: {url: true}});
+			let url_checker = validate({website: urls[current_url_id]['url'].trim()}, {website: {url: true}});
 			if (url_checker !== undefined) {
 				delete urls[current_url_id]
 			}

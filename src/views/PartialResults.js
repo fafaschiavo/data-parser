@@ -17,7 +17,6 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import { CSVLink } from "react-csv";
 import posed from 'react-pose';
 import ReactJson from 'react-json-view'
-import validate from 'validate.js';
 
 // Actions
 import * as global_action_creators from '../actions/GlobalActions.js';
@@ -182,41 +181,33 @@ class PartialResults extends React.Component {
 		if (url.port.length > 0) {
 			base_url = base_url + ':' + url.port
 		}
-		// base_url = base_url + '/'
 
 		// Create a regex pattern to test for absolute URLs
 		var regex_pattern = new RegExp('^(?:[a-z]+:)?//', 'i');
 
 		var urls_to_crawl = {};
 		for (var i = this.state.dialog_json.length - 1; i >= 0; i--) {
-			let scraped_url = this.state.dialog_json[i].text;
+			let scraped_url = this.state.dialog_json[i].text.trim();
 			let is_absolute_url = regex_pattern.test(scraped_url)
 
 			if (is_absolute_url) {
-				let url_checker = validate({website: scraped_url}, {website: {url: true}});
-
-				if (url_checker === undefined) {
-					let new_url_id = uniqid();
-					urls_to_crawl[new_url_id] = {
-						url: scraped_url,
-						url_id: new_url_id,
-						'status': 'in_queue',
-						page_source: false,
-						response_code: false
-					}
+				let new_url_id = uniqid();
+				urls_to_crawl[new_url_id] = {
+					url: scraped_url,
+					url_id: new_url_id,
+					'status': 'in_queue',
+					page_source: false,
+					response_code: false
 				}
-			}else{
-				let url_checker = validate({website: base_url + scraped_url}, {website: {url: true}});
 
-				if (url_checker === undefined) {
-					let new_url_id = uniqid();
-					urls_to_crawl[new_url_id] = {
-						url: base_url + scraped_url,
-						url_id: new_url_id,
-						'status': 'in_queue',
-						page_source: false,
-						response_code: false
-					}
+			}else{
+				let new_url_id = uniqid();
+				urls_to_crawl[new_url_id] = {
+					url: base_url + scraped_url,
+					url_id: new_url_id,
+					'status': 'in_queue',
+					page_source: false,
+					response_code: false
 				}
 			}
 		}

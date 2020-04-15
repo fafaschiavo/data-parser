@@ -1,6 +1,6 @@
 // Debug options ----------------------------------------------------------------------------------------------------------------
 export const debug = process.env.NODE_ENV === 'development'
-export const purge_store_persist_on_reload = process.env.NODE_ENV === 'development' ? true : false
+export const purge_store_persist_on_reload = process.env.NODE_ENV === 'development' ? false : false
 
 // API endpoints ----------------------------------------------------------------------------------------------------------------
 export const scraper_endpoint = process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:8000/scrape/' : 'http://13.59.2.237:5000/scrape/'
