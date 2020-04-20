@@ -5,11 +5,13 @@ import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import Divider from '@material-ui/core/Divider';
 import Input from '@material-ui/core/Input';
+import LinearProgress from '@material-ui/core/LinearProgress';
 import { Redirect } from 'react-router-dom';
 import Popover from 'react-text-selection-popover';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import ScrollArea from 'react-scrollbar';
 import uniqid from 'uniqid';
+import ReactShortcut from 'react-shortcut';
 
 // Actions
 import * as global_action_creators from '../actions/GlobalActions.js';
@@ -30,7 +32,6 @@ class NewMatch extends React.Component {
 		return (
 			<React.Fragment>
 				<div className="post-process-selector-container">
-
 					<div className="post-process-selector-input-container">
 						<Input
 							label="Dense multiline"
@@ -274,6 +275,8 @@ class PostProcess extends React.Component {
 		this.remove_match = this.remove_match.bind(this);
 		this.clear_matches = this.clear_matches.bind(this);
 		this.finish_post_process = this.finish_post_process.bind(this);
+		this.next = this.next.bind(this);
+		this.previous = this.previous.bind(this);
 
 		if (this.state.to_post_process_array.length === 0 ) {
 			let results = prepare_final_resuts(this.props.crawl_urls, this.props.crawl_selectors, this.props.partial_results, this.state.to_post_process_array);
@@ -313,124 +316,141 @@ class PostProcess extends React.Component {
 		this.setState({redirect: '/final-results/'})
 	}
 
+	next(){
+		if (this.state.current_match_index < this.state.to_post_process_array.length - 1) {
+			this.setState({current_match_index: this.state.current_match_index + 1});
+		}
+	}
+
+	previous(){
+		if (this.state.current_match_index > 0) {
+			this.setState({current_match_index: this.state.current_match_index - 1});
+		}
+	}
+
 	render() {
 		if (this.state.redirect) {
 			return <Redirect to={this.state.redirect} />
 		}
 
 		return (
-			<div className="post-process-main-container">
-				<div className="post-process-main-container-inner">
-					<Paper className="post-process-section">
-						<div className="post-process-section-header">
-							<div>
-								<div className="post-process-section-header-title">
-									Post Processing
+			<React.Fragment>
+				<ReactShortcut keys="Right" onKeysPressed={this.next} />
+				<ReactShortcut keys="Left" onKeysPressed={this.previous} />
+				<div className="post-process-main-container">
+					<div className="post-process-main-container-inner">
+						<LinearProgress variant="determinate" value={100*(this.state.current_match_index/this.state.to_post_process_array.length)} />
+						<Paper className="post-process-section">
+							<div className="post-process-section-header">
+								<div>
+									<div className="post-process-section-header-title">
+										Post Processing
+									</div>
+									<div className="post-process-section-header-subtitle">
+										Please highlight and tag all the content accordingly
+									</div>
 								</div>
-								<div className="post-process-section-header-subtitle">
-									Please highlight and tag all the content accordingly
-								</div>
-							</div>
-							<div>
-								<a href={this.state.to_post_process_array[this.state.current_match_index].url.url} rel="noopener noreferrer" target="_blank">
-									<Button className="post-process-previous-button" variant="contained" color="secondary">VISIT PAGE</Button>
-								</a>
-								{this.state.current_match_index === 0 &&
-									<Button className="post-process-previous-button" variant="contained" color="primary" onClick={() => this.setState({redirect: '/partial-results/'})}>BACK</Button>
-								}
-								{this.state.current_match_index > 0 &&
-									<Button className="post-process-previous-button" variant="contained" color="primary" onClick={() => this.setState({current_match_index: this.state.current_match_index - 1})}>PREVIOUS</Button>
-								}
-								{this.state.current_match_index < this.state.to_post_process_array.length - 1 &&
-									<Button className="post-process-next-button" variant="contained" color="primary" onClick={() => this.setState({current_match_index: this.state.current_match_index + 1})}>NEXT</Button>
-								}
-								{this.state.current_match_index === this.state.to_post_process_array.length - 1 &&
-									<Button className="post-process-next-button" variant="contained" color="primary" onClick={this.finish_post_process}>FINISH</Button>
-								}
-							</div>
-						</div>
-						<div className="post-process-section-body">
-							<br />
-							<div className="post-process-section-body-inner">
-								<ScrollArea className="post-process-section-body-left" verticalContainerStyle={{width: 4}}>
-									{constants.tag_options.map((tag) => {
-										if (tag.type !== this.state.current_tag_type) {
-											// eslint-disable-next-line
-											this.state.current_tag_type = tag.type;
-											// eslint-disable-next-line
-											this.state.render_divider = true;
-										}else{
-											// eslint-disable-next-line
-											this.state.render_divider = false;
-										}
-
-										return(
-											<React.Fragment>
-												{this.state.render_divider &&
-													<React.Fragment>
-														<div className="post-process-popover-divider-title">{this.state.current_tag_type}</div>
-														<Divider />
-													</React.Fragment>
-												}
-												<div
-													className="post-process-popover-tag"
-													key={uniqid()}
-													onClick={() => { this.add_match(tag) }} 
-												>
-													<div className="post-process-popover-tag-color" style={{backgroundColor: tag.color}} key={uniqid()}></div>
-													<div className="post-process-popover-tag-title" key={uniqid()}>{tag.title}</div>
-												</div>
-											</React.Fragment>
-										)
+								<div>
+									<a href={this.state.to_post_process_array[this.state.current_match_index].url.url} rel="noopener noreferrer" target="_blank">
+										<Button className="post-process-previous-button" variant="contained" color="secondary">VISIT PAGE</Button>
+									</a>
+									{this.state.current_match_index === 0 &&
+										<Button className="post-process-previous-button" variant="contained" color="primary" onClick={() => this.setState({redirect: '/partial-results/'})}>BACK</Button>
 									}
-									)}
-								</ScrollArea>
-								<div className="post-process-section-body-right">
-									<PostProcessPopovoer parent={this} ref_element={this.ref_text}>
-										<div className="post-process-raw-text" contentEditable="true" ref={this.ref_text}>
-											{this.state.to_post_process_array[this.state.current_match_index].match.text}
-										</div>
-									</PostProcessPopovoer>
-									<PostProcessPopovoer parent={this} ref_element={this.ref_html}>
-										<div className="post-process-raw-html" contentEditable="true" ref={this.ref_html}>
-											{this.state.to_post_process_array[this.state.current_match_index].match.html}
-										</div>
-									</PostProcessPopovoer>
+									{this.state.current_match_index > 0 &&
+										<Button className="post-process-previous-button" variant="contained" color="primary" onClick={this.previous}>PREVIOUS</Button>
+									}
+									{this.state.current_match_index < this.state.to_post_process_array.length - 1 &&
+										<Button className="post-process-next-button" variant="contained" color="primary" onClick={this.next}>NEXT</Button>
+									}
+									{this.state.current_match_index === this.state.to_post_process_array.length - 1 &&
+										<Button className="post-process-next-button" variant="contained" color="primary" onClick={this.finish_post_process}>FINISH</Button>
+									}
 								</div>
 							</div>
-						</div>
-					</Paper>
+							<div className="post-process-section-body">
+								<br />
+								<div className="post-process-section-body-inner">
+									<ScrollArea className="post-process-section-body-left" verticalContainerStyle={{width: 4}}>
+										{constants.tag_options.map((tag) => {
+											if (tag.type !== this.state.current_tag_type) {
+												// eslint-disable-next-line
+												this.state.current_tag_type = tag.type;
+												// eslint-disable-next-line
+												this.state.render_divider = true;
+											}else{
+												// eslint-disable-next-line
+												this.state.render_divider = false;
+											}
 
-					<Paper className="post-process-section">
-						<div className="post-process-section-header">
-							<div>
-								<div className="post-process-section-header-title">
-									Current Tags
-								</div>
-								<div className="post-process-section-header-subtitle">
-									These are the tags selected so far
+											return(
+												<React.Fragment>
+													{this.state.render_divider &&
+														<React.Fragment>
+															<div className="post-process-popover-divider-title">{this.state.current_tag_type}</div>
+															<Divider />
+														</React.Fragment>
+													}
+													<div
+														className="post-process-popover-tag"
+														key={uniqid()}
+														onClick={() => { this.add_match(tag) }} 
+													>
+														<div className="post-process-popover-tag-color" style={{backgroundColor: tag.color}} key={uniqid()}></div>
+														<div className="post-process-popover-tag-title" key={uniqid()}>{tag.title}</div>
+													</div>
+												</React.Fragment>
+											)
+										}
+										)}
+									</ScrollArea>
+									<div className="post-process-section-body-right">
+										<PostProcessPopovoer parent={this} ref_element={this.ref_text}>
+											<div className="post-process-raw-text" contentEditable="true" ref={this.ref_text}>
+												{this.state.to_post_process_array[this.state.current_match_index].match.text}
+											</div>
+										</PostProcessPopovoer>
+										<PostProcessPopovoer parent={this} ref_element={this.ref_html}>
+											<div className="post-process-raw-html" contentEditable="true" ref={this.ref_html}>
+												{this.state.to_post_process_array[this.state.current_match_index].match.html}
+											</div>
+										</PostProcessPopovoer>
+									</div>
 								</div>
 							</div>
-							<div>							
-								<Button className="post-process-next-button" variant="contained" color="primary" onClick={this.clear_matches}>CLEAR</Button>
-							</div>
-						</div>
-						<br />
-						{Object.keys(this.state.to_post_process_array[this.state.current_match_index].post_processed).length > 0 &&
-							<Divider />
-						}
-						<ScrollArea className="post-process-section-body post-process-matcehs-section">
-							{Object.keys(this.state.to_post_process_array[this.state.current_match_index].post_processed).map((tag_id) => {
-								let match = this.state.to_post_process_array[this.state.current_match_index].post_processed[tag_id];
-								return(
-									<NewMatch parent={this} match={match} key={uniqid()}/>
-								)
-							})}
-						</ScrollArea>
-					</Paper>
+						</Paper>
 
+						<Paper className="post-process-section">
+							<div className="post-process-section-header">
+								<div>
+									<div className="post-process-section-header-title">
+										Current Tags
+									</div>
+									<div className="post-process-section-header-subtitle">
+										These are the tags selected so far
+									</div>
+								</div>
+								<div>							
+									<Button className="post-process-next-button" variant="contained" color="primary" onClick={this.clear_matches}>CLEAR</Button>
+								</div>
+							</div>
+							<br />
+							{Object.keys(this.state.to_post_process_array[this.state.current_match_index].post_processed).length > 0 &&
+								<Divider />
+							}
+							<ScrollArea className="post-process-section-body post-process-matcehs-section">
+								{Object.keys(this.state.to_post_process_array[this.state.current_match_index].post_processed).map((tag_id) => {
+									let match = this.state.to_post_process_array[this.state.current_match_index].post_processed[tag_id];
+									return(
+										<NewMatch parent={this} match={match} key={uniqid()}/>
+									)
+								})}
+							</ScrollArea>
+						</Paper>
+
+					</div>
 				</div>
-			</div>
+			</React.Fragment>
 		);
 	}
 }

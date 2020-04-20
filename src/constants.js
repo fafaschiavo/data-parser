@@ -77,16 +77,16 @@ export const tag_options = [
 		color: '#e17c2c'
 	},
 	{
-		title: 'Object Top Estimation',
-		type: 'object',
-		tag_id: 'zw7vvtnzb8',
-		color: '#acb59d'
-	},
-	{
 		title: 'Object Floor Estimation',
 		type: 'object',
 		tag_id: 'gup7bwnypd',
 		color: '#b87f44'
+	},
+	{
+		title: 'Object Top Estimation',
+		type: 'object',
+		tag_id: 'zw7vvtnzb8',
+		color: '#acb59d'
 	},
 	{
 		title: 'Object Hammer Price',
@@ -122,7 +122,37 @@ export const tag_options = [
 		title: 'Object Description',
 		type: 'object',
 		tag_id: 'wjapmaqcmz',
-		color: '#741920'
+		color: '#6b72dd'
+	},
+	{
+		title: 'Object Extra Info',
+		type: 'object',
+		tag_id: 'widhku9p2l',
+		color: '#fe5012'
+	},
+	{
+		title: 'Object Lot Number',
+		type: 'object',
+		tag_id: 'ltlxihttlf',
+		color: '#013ab0'
+	},
+	{
+		title: 'Object Year of Creation',
+		type: 'object',
+		tag_id: 'ghqcdd5hho',
+		color: '#a871de'
+	},
+	{
+		title: 'Object Identification',
+		type: 'object',
+		tag_id: 'zol6lprlzd',
+		color: '#ba35fe'
+	},
+	{
+		title: 'Object Provenance',
+		type: 'object',
+		tag_id: 'eseceqwdbt',
+		color: '#328ea3'
 	},
 	{
 		title: 'Object Not Sold',
@@ -173,6 +203,12 @@ export const tag_options = [
 		type: 'auction',
 		tag_id: 'cjzjtwgg7e',
 		color: '#52c40e'
+	},
+	{
+		title: 'Auction City',
+		type: 'auction',
+		tag_id: 'fbqffkvcsm',
+		color: '#33f346'
 	},
 	{
 		title: 'Auction Source ID',

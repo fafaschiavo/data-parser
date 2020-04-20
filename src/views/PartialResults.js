@@ -134,8 +134,11 @@ function generate_csv_from_matches(urls, selectors, matches){
 				current_row.push('');
 
 			} else if (matches[url_id][selector_id].length === 1) {
-				current_row.push(matches[url_id][selector_id][0].text.replace(/(\r\n|\n|\r)/gm, " "));
-
+				if (matches[url_id][selector_id][0].text !== null) {
+					current_row.push(matches[url_id][selector_id][0].text.replace(/(\r\n|\n|\r)/gm, " "));
+				}else{
+					current_row.push('');
+				}
 			}else{
 				current_row.push(JSON.stringify(matches[url_id][selector_id]).replace(/(\r\n|\n|\r)/gm, " "));
 			}
@@ -275,7 +278,7 @@ class PartialResults extends React.Component {
 																{this.props.partial_results[url_id][selector_id].length === 1 &&
 																<CopyToClipboard text={ this.props.partial_results[url_id][selector_id][0].text }>
 																	<EllipsisText
-																		text={ this.props.partial_results[url_id][selector_id][0].text }
+																		text={ this.props.partial_results[url_id][selector_id][0].text === null ? '' : this.props.partial_results[url_id][selector_id][0].text }
 																		length={"70"}
 																	/>
 																</CopyToClipboard>

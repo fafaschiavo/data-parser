@@ -45,6 +45,7 @@ a{
 	margin-left: 10px !important;
 }
 .table-container{
+	max-height: 400px;
 	padding: 20px;
 	width: max-content;
 }
