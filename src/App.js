@@ -88,11 +88,11 @@ class App extends Component {
 		}
 	}
 
-	componentDidMount() {
-		$(document).mouseleave(function () {
-			this.setState({open_back_warning_dialog: true});
-		}.bind(this));
-	}
+	// componentDidMount() {
+	// 	$(document).mouseleave(function () {
+	// 		this.setState({open_back_warning_dialog: true});
+	// 	}.bind(this));
+	// }
 
 	render() {
 		return (
