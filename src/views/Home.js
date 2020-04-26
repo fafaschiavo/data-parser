@@ -9,12 +9,19 @@ import Divider from '@material-ui/core/Divider';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import List from '@material-ui/core/List';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import Dialog from '@material-ui/core/Dialog';
 import Snackbar from '@material-ui/core/Snackbar';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import ListItemAvatar from '@material-ui/core/ListItemAvatar';
+import TextField from '@material-ui/core/TextField';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import uniqid from 'uniqid';
 import ReactTooltip from 'react-tooltip'
 import ScrollArea from 'react-scrollbar';
+import $ from "jquery";
 
 // Actions
 import * as global_action_creators from '../actions/GlobalActions.js';
@@ -24,6 +31,13 @@ import './styles/Home.css';
 
 // Constants import
 import * as constants from '../constants.js'
+
+function json_parse_booleans(key, value){
+	if (value === 'false') {
+		return false
+	}
+	return value
+}
 
 function validate_css_selector(selector){
 	try {
@@ -194,7 +208,15 @@ class Home extends React.Component {
 		this.state = {
 			add_selector_field: '',
 			selectors: this.props.crawl_selectors ? this.props.crawl_selectors : {},
-			urls: this.props.full_list_urls
+			urls: this.props.full_list_urls,
+			snackbar_open: false,
+			snackbar_message: '',
+			redirect: false,
+			new_selector_set_name: '',
+			display_save_dialog: false,
+			display_load_dialog: false,
+			is_selector_set_loading: true,
+			available_selector_sets: []
 		}
 
 		this.add_selector = this.add_selector.bind(this);
@@ -203,6 +225,10 @@ class Home extends React.Component {
 		this.add_attribute = this.add_attribute.bind(this);
 		this.edit_selector = this.edit_selector.bind(this);
 		this.next = this.next.bind(this);
+		this.save = this.save.bind(this);
+		this.delete = this.delete.bind(this);
+		this.load = this.load.bind(this);
+		this.load_selectors = this.load_selectors.bind(this);
 	}
 
 	// Add a new empty CSS selector
@@ -217,9 +243,6 @@ class Home extends React.Component {
 			regex: '',
 			attr: 'innerText',
 			urls: [],
-			snackbar_open: false,
-			snackbar_message: '',
-			redirect: false
 		}
 		this.setState({selectors: new_selectors})
 		this.setState({add_selector_field: ''})
@@ -274,7 +297,82 @@ class Home extends React.Component {
 		this.props.actions.set_crawl_selectors(selectors)
 		
 		this.setState({redirect: "/urls/"})
-	
+	}
+
+	load_selectors(){
+		this.setState({is_selector_set_loading: true});
+		this.setState({display_load_dialog: true});
+		$.ajax({
+			context: this,
+			url: constants.load_selector_sets,
+			type: 'get',
+			data: {},
+			success: function(data) {
+				console.log(data)
+				this.setState({available_selector_sets: data.selector_sets});
+				this.setState({is_selector_set_loading: false});
+			},
+			error: function(data) {},
+			complete: function(XHR, status){},
+			timeout: 120000
+		});
+	}
+
+	load(selector_set){
+		var selector_set_dict = JSON.parse(selector_set, json_parse_booleans);
+		this.setState({ selectors: selector_set_dict });
+		this.setState({display_load_dialog: false});
+		console.log(selector_set_dict)
+	}
+
+	save(){	
+		if (this.state.new_selector_set_name.length === 0) {
+			this.setState({snackbar_message: 'Please give your selector set a proper name'})
+			this.setState({snackbar_open: true})
+			return 
+		}
+
+		this.setState({display_save_dialog: false})
+		$.ajax({
+			context: this,
+			url: constants.save_selector_sets,
+			type: 'get',
+			data: {
+				'selector_set': this.state.selectors,
+				'set_name': this.state.new_selector_set_name
+			},
+			success: function(data) {
+				if (data.status === 'success') {
+					this.setState({snackbar_message: 'Saved!'})
+					this.setState({snackbar_open: true})					
+				}else{
+					this.setState({snackbar_message: 'Sorry, I got an error...'})
+					this.setState({snackbar_open: true})
+				}
+			},
+			error: function(data) {
+				this.setState({snackbar_message: 'Sorry, I got an error...'})
+				this.setState({snackbar_open: true})
+			},
+			complete: function(XHR, status){},
+			timeout: 120000
+		});
+	}
+
+	delete(select_set_hash_id){
+		this.setState({display_load_dialog: false})
+		$.ajax({
+			context: this,
+			url: constants.delete_selector_set,
+			type: 'get',
+			data: {
+				'hash_id': select_set_hash_id,
+			},
+			success: function(data) {},
+			error: function(data) {},
+			complete: function(XHR, status){},
+			timeout: 120000
+		});
 	}
 
 	render() {
@@ -296,6 +394,8 @@ class Home extends React.Component {
 							</div>
 						</div>
 						<div>							
+							<Button className="home-run-button" variant="contained" color="secondary" onClick={this.load_selectors} style={{marginRight: 10}}>LOAD</Button>
+							<Button className="home-run-button" variant="contained" color="secondary" onClick={() => this.setState({display_save_dialog: true})} style={{marginRight: 10}}>SAVE</Button>
 							<Button className="home-run-button" variant="contained" color="primary" onClick={this.next}>NEXT</Button>
 						</div>
 					</div>
@@ -345,11 +445,62 @@ class Home extends React.Component {
 					</ScrollArea>
 				</Paper>
 
-				<Snackbar message={this.state.snackbar_message} open={this.state.snackbar_open} onClose={() => this.setState({snackbar_open: false})} />
+				<Dialog
+					open={this.state.display_save_dialog}
+					onClose={() => this.setState({display_save_dialog: false})}
+					aria-labelledby="alert-dialog-title"
+					aria-describedby="alert-dialog-description"
+				>
+					<DialogTitle id="alert-dialog-title">Save Selector Set</DialogTitle>
+					<DialogContent>
+						<DialogContentText id="alert-dialog-description">
+							Give your selector set a name. It should have a name that reminds you of the website and type of page you're parsing.
+						</DialogContentText>
+						<TextField
+							style={{marginTop: 10, marginBottom: 10 }}
+							fullWidth={true}
+							id="outlined-basic"
+							label="Selecto Set Name"
+							variant="outlined"
+							value={this.state.new_selector_set_name}
+							onChange={(event) => this.setState({new_selector_set_name: event.target.value})}
+						/>
+					</DialogContent>
+					<DialogActions>
+						<Button onClick={() => this.setState({display_save_dialog: false})} color="secondary" variant="contained">CANCEL</Button>
+						<Button onClick={this.save} color="primary" variant="contained">SAVE</Button>
+					</DialogActions>
+				</Dialog>
+
+				<Dialog onClose={() => this.setState({display_load_dialog: false})} aria-labelledby="simple-dialog-title" open={this.state.display_load_dialog}>
+					<DialogTitle id="simple-dialog-title">Load Selector Set</DialogTitle>
+					{this.state.is_selector_set_loading &&
+						<div className="home-load-dialog-progress-container">
+							<CircularProgress />
+						</div>
+					}
+					{!this.state.is_selector_set_loading &&
+						<List>
+							{this.state.available_selector_sets.map((selector_set) => {
+								return(
+									<ListItem className="home-load-dialog-item">
+										<ListItemText onClick={() => this.load(selector_set.selectors_json)} primary={selector_set.set_name} />
+										<ListItemAvatar onClick={() => this.delete(selector_set.hash_id)} className="home-load-dialog-delete-button">
+											<i className="material-icons">delete</i>
+										</ListItemAvatar>
+									</ListItem>
+								)
+							})}
+						</List>
+					}
+				</Dialog>
+
+				<Snackbar message={this.state.snackbar_message} open={this.state.snackbar_open} autoHideDuration={5000} onClose={() => this.setState({snackbar_open: false})} />
 			</div>
 		);
 	}
 }
+
 
 // Map Redux state to component props
 function mapStateToProps(state) {

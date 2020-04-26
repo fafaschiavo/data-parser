@@ -57,3 +57,22 @@
     padding-left: 6px;
     padding-right: 6px;
 }
+.home-load-dialog-delete-button{
+	display: flex;
+	justify-content: flex-end;
+	width: min-content !important;
+	min-width: fit-content !important;
+}
+.home-load-dialog-item{
+	cursor: pointer;
+}
+.home-load-dialog-item:hover{
+	background-color: #f2f2f2;
+}
+.home-load-dialog-progress-container{
+	height: 100px;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}

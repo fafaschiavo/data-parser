@@ -3,7 +3,11 @@ export const debug = process.env.NODE_ENV === 'development'
 export const purge_store_persist_on_reload = process.env.NODE_ENV === 'development' ? false : false
 
 // API endpoints ----------------------------------------------------------------------------------------------------------------
-export const scraper_endpoint = process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:8000/scrape/' : 'http://13.59.2.237:5000/scrape/'
+export const scraper_base_url = process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:5000' : 'http://13.59.2.237:5000';
+export const scraper_endpoint = scraper_base_url + '/scrape/';
+export const save_selector_sets = scraper_base_url + '/save-selector-set/';
+export const load_selector_sets = scraper_base_url + '/selector-sets/';
+export const delete_selector_set = scraper_base_url + '/delete-selector-set/';
 
 // Default Tags
 export const tag_options = [

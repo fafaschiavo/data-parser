@@ -33,9 +33,9 @@ const material_ui_theme = {
 			contrastText: '#FFFFFF',
 		},
 		secondary: {
-			main: '#BEBEBE',
-			light: '#BEBEBE',
-			dark: '#BEBEBE',
+			main: '#e5e5e5',
+			light: '#e5e5e5',
+			dark: '#e5e5e5',
 			contrastText: '#000000',
 		},
 		primary1Color: '#361FFB',
