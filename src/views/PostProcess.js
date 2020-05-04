@@ -6,6 +6,7 @@ import Button from '@material-ui/core/Button';
 import Divider from '@material-ui/core/Divider';
 import Input from '@material-ui/core/Input';
 import LinearProgress from '@material-ui/core/LinearProgress';
+import Snackbar from '@material-ui/core/Snackbar';
 import { Redirect } from 'react-router-dom';
 import Popover from 'react-text-selection-popover';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
@@ -251,6 +252,14 @@ function prepare_final_resuts(urls, selectors, matches, post_processed){
 	return(results)
 }
 
+function get_tag(tag_id){
+	for (var i = constants.tag_options.length - 1; i >= 0; i--) {
+		if (constants.tag_options[i].tag_id === tag_id) {
+			return constants.tag_options[i]
+		}
+	}
+	return false
+}
 
 class PostProcess extends React.Component {
 	constructor(props) {
@@ -268,9 +277,12 @@ class PostProcess extends React.Component {
 			current_selection: '',
 			redirect: false,
 			current_tag_type: '',
-			render_divider: false
+			render_divider: false,
+			snackbar_open: false,
+			snackbar_message: '',
 		}
 
+		this.add_regex_match = this.add_regex_match.bind(this);
 		this.add_match = this.add_match.bind(this);
 		this.remove_match = this.remove_match.bind(this);
 		this.clear_matches = this.clear_matches.bind(this);
@@ -291,6 +303,34 @@ class PostProcess extends React.Component {
 
 		new_to_post_process_array[this.state.current_match_index].post_processed[tag.tag_id] = {text: this.state.current_selection, html: this.state.current_selection, tag: tag}
 		this.setState({to_post_process_array: new_to_post_process_array});
+	}
+
+	add_regex_match(regex){
+		let current_text = this.state.to_post_process_array[this.state.current_match_index].match.text;
+		let regex_selector = regex.regex;
+		let matches = regex_selector.exec(current_text);
+
+		if (matches !== null) {
+			if (matches.length === regex.tags.length + 1) {
+				for (var i = 1; i < matches.length; i++) {
+
+					let match = matches[i];
+					let tag_id = regex.tags[i-1]
+					let tag = get_tag(tag_id);
+
+					var new_to_post_process_array = this.state.to_post_process_array.slice();
+					new_to_post_process_array[this.state.current_match_index].post_processed[tag_id] = {text: match, html: match, tag: tag}
+					this.setState({to_post_process_array: new_to_post_process_array});
+				}
+			}else{
+				this.setState({snackbar_open: true});
+				this.setState({snackbar_message: 'No perfect match found'});	
+			}
+		}else{
+			this.setState({snackbar_open: true});
+			this.setState({snackbar_message: 'No match found'});
+		}
+
 	}
 
 	remove_match(tag_id){
@@ -372,6 +412,21 @@ class PostProcess extends React.Component {
 								<br />
 								<div className="post-process-section-body-inner">
 									<ScrollArea className="post-process-section-body-left" verticalContainerStyle={{width: 4}}>
+										<React.Fragment>
+											<div className="post-process-popover-divider-title">Regex Selectors</div>
+											<Divider />
+										</React.Fragment>
+										{constants.regex_options.map((regex) => { return(
+											<div
+												className="post-process-popover-regex"
+												key={uniqid()}
+												onClick={ () => { this.add_regex_match(regex) }} 
+											>
+												<div className="post-process-popover-tag-regex-name" key={uniqid()}>{regex.title}</div>
+												<div className="post-process-popover-tag-regex-example" key={uniqid()}>{regex.example}</div>
+											</div>
+										)})}
+
 										{constants.tag_options.map((tag) => {
 											if (tag.type !== this.state.current_tag_type) {
 												// eslint-disable-next-line
@@ -450,6 +505,11 @@ class PostProcess extends React.Component {
 
 					</div>
 				</div>
+				<Snackbar
+					open={this.state.snackbar_open}
+					onClose={() => this.setState({snackbar_open: false})}
+					message={this.state.snackbar_message}
+				/>
 			</React.Fragment>
 		);
 	}

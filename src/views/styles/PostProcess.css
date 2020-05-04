@@ -48,7 +48,7 @@
 	align-items: stretch;
 }
 .post-process-section-body-left{
-	width: 290px;
+	min-width: 300px;
 	min-height: 300px;
 	max-height: 400px;
 	padding: 5px;
@@ -60,6 +60,26 @@
 	display: flex;
 	flex-direction: column;
 	max-width: calc(100% - 300px);
+}
+.post-process-popover-regex{
+	cursor: pointer;
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+	flex-direction: column;
+	padding: 4px;
+}
+.post-process-popover-regex:hover{
+	background-color: #eaeaea;
+}
+.post-process-popover-tag-regex-name{
+	width: 100%;
+}
+.post-process-popover-tag-regex-example{
+	width: 100%;
+	font-size: 12px;
+	color: #c3c3c3;
+	font-weight: 700;
 }
 .post-process-tag{
 	cursor: pointer;

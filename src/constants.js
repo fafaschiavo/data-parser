@@ -9,6 +9,34 @@ export const save_selector_sets = scraper_base_url + '/save-selector-set/';
 export const load_selector_sets = scraper_base_url + '/selector-sets/';
 export const delete_selector_set = scraper_base_url + '/delete-selector-set/';
 
+// Default Regex
+export const regex_options = [
+	{
+		title: 'Artist Name + Death Year + Birth Year',
+		example: 'Andy Warhol (1928-1987)',
+		regex: /^([a-zA-Z\s]*)\s\(([0-9]*)-([0-9]*)\)/g,
+		tags: ['b4hkvqk7mc', 'ukvfzw8rep', 'anptku77fe'],
+		regex_id: '6lZCSihs7w'
+	},
+	{
+		title: 'Currency + Floor Est. + Top Est.',
+		example: 'USD 400,000 - USD 600,000',
+		// eslint-disable-next-line
+		regex: /^([A-Z]{3})\s([0-9\,\.]*)[\s\-A-Z]*([0-9\,\.]*)/g,
+		tags: ['tnjcrwnpwk', 'gup7bwnypd', 'zw7vvtnzb8'],
+		regex_id: 'ReRbEVeknb'
+	},
+	{
+		title: 'Hammer Price',
+		example: 'USD 400,000',
+		// eslint-disable-next-line
+		regex: /^([A-Z]{3})\s([0-9\,\.]*)/g,
+		tags: ['tnjcrwnpwk', 'gup7bwnypd'],
+		regex_id: 'ReRbEVeknb'
+	}
+]
+
+
 // Default Tags
 export const tag_options = [
 	// Artist Tags
@@ -147,7 +175,7 @@ export const tag_options = [
 		color: '#a871de'
 	},
 	{
-		title: 'Object Identification',
+		title: 'Object Signature',
 		type: 'object',
 		tag_id: 'zol6lprlzd',
 		color: '#ba35fe'
@@ -164,7 +192,7 @@ export const tag_options = [
 		tag_id: 'yafpgxc4yv',
 		color: '#1789ad'
 	},
-		{
+	{
 		title: 'Object Source ID',
 		type: 'object',
 		tag_id: 'e3ssleqyge',
