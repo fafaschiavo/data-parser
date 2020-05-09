@@ -67,6 +67,7 @@ class Home extends React.Component {
 		this.run = this.run.bind(this);
 		this.use_proxy_changed = this.use_proxy_changed.bind(this);
 		this.scroll_page_changed = this.scroll_page_changed.bind(this);
+		this.wait_for_async_loading_changed = this.wait_for_async_loading_changed.bind(this);
 	}
 
 	url_list_changed(event){
@@ -137,6 +138,14 @@ class Home extends React.Component {
 		this.setState(new_state)
 	}
 
+	wait_for_async_loading_changed(event, is_checked){
+		const new_state = update(this.state, {
+			scraper_settings: {wait_for_async_loading: {$set: is_checked}},
+		});
+		this.props.actions.set_scraper_settings(new_state.scraper_settings)
+		this.setState(new_state)
+	}
+
 	render() {
 		if (this.state.redirect) {
 			return <Redirect to={this.state.redirect} />
@@ -195,7 +204,7 @@ class Home extends React.Component {
 								onChange={this.use_proxy_changed}
 								color='primary'
 							/>
-							<span>Use proxies on every request</span>
+							<span>Use proxies on every request.</span>
 						</div>
 						<div>
 							<Checkbox
@@ -203,7 +212,15 @@ class Home extends React.Component {
 								onChange={this.scroll_page_changed}
 								color='primary'
 							/>
-							<span>Scroll page all the way before parsing</span>
+							<span>Scroll page all the way before parsing.</span>
+						</div>
+						<div>
+							<Checkbox
+								checked={this.state.scraper_settings.wait_for_async_loading}
+								onChange={this.wait_for_async_loading_changed}
+								color='primary'
+							/>
+							<span>Wait for asynchronous loading.</span>
 						</div>
 					</div>
 				</Paper>

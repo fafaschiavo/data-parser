@@ -6,7 +6,8 @@ const initial_state = {
 	final_results: false,
 	scraper_settings: {
 		use_proxy: false,
-		scroll_page: false
+		scroll_page: false,
+		wait_for_async_loading: false
 	}
 }
 
