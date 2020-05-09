@@ -58,6 +58,7 @@ class Selector extends React.Component {
 			open_tags_dialog: false,
 			open_attributes_dialog: false,
 			is_selector_valid: true,
+			custom_attribute: ''
 		}
 	}
 
@@ -132,6 +133,15 @@ class Selector extends React.Component {
 					aria-labelledby="simple-dialog-title"
 				>
 					<DialogTitle id="simple-dialog-title">Select an Attribute</DialogTitle>
+					<TextField
+						style={{margin: 10}}
+						label="Custom Attribute"
+						variant="outlined"
+						value={this.state.new_selector_set_name}
+						// eslint-disable-next-line
+						onChange={(event) => this.state.custom_attribute = event.target.value}
+						onKeyDown={(e) => { if (e.key === 'Enter') this.props.add_attribute(this.props.config.selector_id, this.state.custom_attribute); }}
+					/>
 					<List>
 						<ListItem
 							button

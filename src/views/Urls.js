@@ -66,6 +66,7 @@ class Home extends React.Component {
 		this.url_list_changed = this.url_list_changed.bind(this);
 		this.run = this.run.bind(this);
 		this.use_proxy_changed = this.use_proxy_changed.bind(this);
+		this.scroll_page_changed = this.scroll_page_changed.bind(this);
 	}
 
 	url_list_changed(event){
@@ -123,6 +124,14 @@ class Home extends React.Component {
 	use_proxy_changed(event, is_checked){
 		const new_state = update(this.state, {
 			scraper_settings: {use_proxy: {$set: is_checked}},
+		});
+		this.props.actions.set_scraper_settings(new_state.scraper_settings)
+		this.setState(new_state)
+	}
+
+	scroll_page_changed(event, is_checked){
+		const new_state = update(this.state, {
+			scraper_settings: {scroll_page: {$set: is_checked}},
 		});
 		this.props.actions.set_scraper_settings(new_state.scraper_settings)
 		this.setState(new_state)
@@ -187,6 +196,14 @@ class Home extends React.Component {
 								color='primary'
 							/>
 							<span>Use proxies on every request</span>
+						</div>
+						<div>
+							<Checkbox
+								checked={this.state.scraper_settings.scroll_page}
+								onChange={this.scroll_page_changed}
+								color='primary'
+							/>
+							<span>Scroll page all the way before parsing</span>
 						</div>
 					</div>
 				</Paper>

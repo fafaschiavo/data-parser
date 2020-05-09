@@ -5,7 +5,8 @@ const initial_state = {
 	partial_results: false,
 	final_results: false,
 	scraper_settings: {
-		use_proxy: true
+		use_proxy: false,
+		scroll_page: false
 	}
 }
 
